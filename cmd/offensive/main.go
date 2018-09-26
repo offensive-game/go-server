@@ -1,11 +1,13 @@
 package main
 
 import (
-	"../../internal/app/config"
-	"../../internal/app/server"
+	"fmt"
+	"go-server/internal/app/config"
+	"go-server/internal/app/server"
 )
 
-func main() {
-	conf := config.Config{ Port:"8080"}
-	server.StartUpServer(conf)
+func main () {
+	c := config.Config{ Port: ":8080" }
+	server.StartUpServer(c)
+	fmt.Println("Djordje Vukovic")
 }

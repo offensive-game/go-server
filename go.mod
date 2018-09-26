@@ -1,1 +1,1 @@
-module github.com/offensive-game/go-server
+module go-server

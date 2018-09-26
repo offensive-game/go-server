@@ -1,15 +1,15 @@
 package server
 
 import (
-	"../config"
 	"fmt"
+	"go-server/internal/app/config"
 	"net/http"
 	"strings"
 )
 
-func StartUpServer(config config.Config) {
+func StartUpServer(cfg config.Config) {
 	http.HandleFunc("/", Handler)
-	http.ListenAndServe(":3001", nil)
+	http.ListenAndServe(cfg.Port, nil)
 }
 
 func Handler(response http.ResponseWriter, request *http.Request) {
