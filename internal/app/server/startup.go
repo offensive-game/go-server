@@ -2,14 +2,23 @@ package server
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"go-server/internal/app/config"
 	"net/http"
+	"os"
 	"strings"
 )
 
+func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
+
 func StartUpServer(cfg config.Config) {
 	http.HandleFunc("/", Handler)
-	http.ListenAndServe(cfg.Port, nil)
+	log.Info(fmt.Sprintf("Starting server on port %s", cfg.Port))
+	log.Fatal(http.ListenAndServe(cfg.Port, nil))
 }
 
 func Handler(response http.ResponseWriter, request *http.Request) {
