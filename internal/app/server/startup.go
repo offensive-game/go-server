@@ -18,7 +18,10 @@ func init() {
 func StartUpServer(cfg config.Config) {
 	http.HandleFunc("/", Handler)
 	log.Info(fmt.Sprintf("Starting server on port %s", cfg.Port))
-	log.Fatal(http.ListenAndServe(cfg.Port, nil))
+	err := http.ListenAndServeTLS(cfg.Port, "offensive.local.crt", "offensive.local.key", nil)
+	if err != nil {
+		log.Fatal("Unable to run server", err)
+	}
 }
 
 func Handler(response http.ResponseWriter, request *http.Request) {
