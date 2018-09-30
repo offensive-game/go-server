@@ -10,9 +10,10 @@ import (
 
 func main() {
 	port := os.Getenv("PORT")
+	dbHost := os.Getenv("DB_HOST")
 	if port == "" {
 		log.Fatal("Port env variable is not supplied")
 	}
-	c := config.Config{Port: fmt.Sprintf(":%s", port)}
+	c := config.Config{Port: fmt.Sprintf(":%s", port), DbHost: dbHost,}
 	server.StartUpServer(c)
 }
