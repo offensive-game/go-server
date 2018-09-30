@@ -1,7 +1,9 @@
 package handlers
+
 import (
 	"database/sql"
 	"encoding/json"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )
 
@@ -23,6 +25,12 @@ func (s Signup) ServeHTTP (res http.ResponseWriter, req *http.Request) {
 			panic(err)
 		}
 
+		hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.MinCost)
+		if err != nil {
+			panic(err)
+		}
+		body.Password = string(hash)
+
 		exists, err := userWithCredentialsExist(s, body.Username, body.Password)
 		if err != nil {
 			panic(err)
@@ -31,8 +39,12 @@ func (s Signup) ServeHTTP (res http.ResponseWriter, req *http.Request) {
 		if exists {
 			respondBadRequest(&res, "User already exists")
 		} else {
-			createNewUser(s, body)
-			respondOK(&res, body)
+			ok := createNewUser(s, body)
+			if  ok {
+				respondOK(&res, body)
+			} else {
+				respondServerError(&res, "Unable to create a new user")
+			}
 		}
 	}
 }

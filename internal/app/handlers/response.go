@@ -34,3 +34,11 @@ func respondBadRequest(res *http.ResponseWriter, message string) error {
 	(*res).Write([]byte(fmt.Sprintf("{ \"error\": \"%s\" }", message)))
 	return nil
 }
+
+func respondServerError(res *http.ResponseWriter, message string) error {
+	(*res).Header().Set("Content-Type", "application/json")
+	(*res).WriteHeader(500)
+
+	(*res).Write([]byte(fmt.Sprintf("{ \"error\": \"%s\" }", message)))
+	return nil
+}
