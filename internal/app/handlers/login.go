@@ -20,11 +20,6 @@ type Login struct {
 }
 
 func (l Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	if req.Method != "POST" {
-		respondBadRequest(&res, "Bad endpoint")
-		return
-	}
-
 	body := LoginMessage{}
 	err := json.NewDecoder(req.Body).Decode(&body)
 	if err != nil {

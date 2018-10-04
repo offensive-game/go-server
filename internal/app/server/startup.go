@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"go-server/internal/app/config"
 	"go-server/internal/app/handlers"
+	"go-server/pkg/middleware"
 	"net/http"
 	"os"
 )
@@ -33,23 +34,22 @@ func StartUpServer(cfg config.Config) {
 	}
 }
 
-func Handler(response http.ResponseWriter, request *http.Request) {
-	response.Write([]byte("Up and running"))
-}
-
 func setUpHandlers(db *sql.DB) {
 	// Health check
-	http.HandleFunc("/hc", hc)
+	http.Handle("/hc", middleware.Chain("GET", http.HandlerFunc(hc)))
 
 	// Signup Handler
 	signup := handlers.Signup{Db: db}
-	http.Handle("/signup", signup)
+	http.Handle("/signup", middleware.Chain("POST", signup))
 
 	// Login Handler
 	login := handlers.Login{Db: db}
-	http.Handle("/login", login)
+	http.Handle("/login", middleware.Chain("POST", login))
 }
 
 func hc(res http.ResponseWriter, _ *http.Request) {
-	res.Write([]byte("Alive"))
+	_, err := res.Write([]byte("Alive"))
+	if err != nil {
+		panic(err)
+	}
 }
