@@ -40,11 +40,16 @@ func Handler(response http.ResponseWriter, request *http.Request) {
 func setUpHandlers(db *sql.DB) {
 	// Health check
 	http.HandleFunc("/hc", hc)
+
 	// Signup Handler
-	signup := handlers.Signup{ Db: db }
+	signup := handlers.Signup{Db: db}
 	http.Handle("/signup", signup)
+
+	// Login Handler
+	login := handlers.Login{Db: db}
+	http.Handle("/login", login)
 }
 
-func hc (res http.ResponseWriter, _ *http.Request) {
+func hc(res http.ResponseWriter, _ *http.Request) {
 	res.Write([]byte("Alive"))
 }

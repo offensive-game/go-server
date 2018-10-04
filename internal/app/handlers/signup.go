@@ -49,14 +49,18 @@ func (s Signup) ServeHTTP (res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func userWithCredentialsExist (s Signup, username string, password string) (bool, error) {
+func userWithCredentialsExist (s Signup, username string, email string) (bool, error) {
 	queryStatement, err := s.Db.Prepare("SELECT COUNT(*) from users WHERE username = $1 OR email = $2")
 	if err != nil {
 		return false, err
 	}
 
 	var count int
-	queryStatement.QueryRow(username, password).Scan(&count)
+	row := queryStatement.QueryRow(username, email)
+	err = row.Scan(&count)
+	if err != nil {
+		return false, err
+	}
 
 	return count != 0, nil
 }
