@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
+	"go-server/internal/app/middleware"
+	"go-server/internal/app/utils"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
@@ -16,27 +17,31 @@ type LoginMessage struct {
 }
 
 type Login struct {
-	Db *sql.DB
+	appContext middleware.AppContext
+}
+
+func (l Login) SetAppContext(appContext middleware.AppContext) {
+	l.appContext = appContext
 }
 
 func (l Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	body := LoginMessage{}
 	err := json.NewDecoder(req.Body).Decode(&body)
 	if err != nil {
-		respondBadRequest(&res, "Bad request")
+		utils.RespondBadRequest(&res, "Bad request")
 		return
 	}
 
 	id, err := l.userIdForCredentials(body.Username, body.Password)
 	if err != nil {
-		respondBadRequest(&res, "Invalid username or password")
+		utils.RespondBadRequest(&res, "Invalid username or password")
 		return
 	}
 
 	session, err := l.createSession(id)
 
 	if err != nil {
-		respondBadRequest(&res, "Can't create session")
+		utils.RespondBadRequest(&res, "Can't create session")
 		return
 	}
 
@@ -45,7 +50,7 @@ func (l Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	jsonData, err := json.Marshal(body)
 	if err != nil {
-		respondServerError(&res, "Server error")
+		utils.RespondServerError(&res, "Server error")
 		return
 	}
 
@@ -65,7 +70,7 @@ func (l Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func (l Login) userIdForCredentials(username string, password string) (int64, error) {
-	statement, err := l.Db.Prepare("SELECT id, password FROM users WHERE username = $1")
+	statement, err := l.appContext.DB.Prepare("SELECT id, password FROM users WHERE username = $1")
 	if err != nil {
 		return 0, err
 	}
@@ -87,7 +92,7 @@ func (l Login) userIdForCredentials(username string, password string) (int64, er
 
 func (l Login) createSession(userId int64) (string, error) {
 	// delete old sessions
-	deleteStmt, err := l.Db.Prepare("DELETE FROM sessions WHERE userId = $1")
+	deleteStmt, err := l.appContext.DB.Prepare("DELETE FROM sessions WHERE userId = $1")
 	if err != nil {
 		return "", err
 	}
@@ -95,7 +100,7 @@ func (l Login) createSession(userId int64) (string, error) {
 	deleteStmt.Exec(userId)
 
 	// create new session
-	createStmt, err := l.Db.Prepare("INSERT INTO sessions (userId, token) VALUES ($1, $2)")
+	createStmt, err := l.appContext.DB.Prepare("INSERT INTO sessions (userId, token) VALUES ($1, $2)")
 	if err != nil {
 		return "", err
 	}

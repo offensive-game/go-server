@@ -1,4 +1,4 @@
-package handlers
+package utils
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func respondOK(res *http.ResponseWriter, body interface{}) {
+func RespondOK(res *http.ResponseWriter, body interface{}) {
 	(*res).Header().Set("Content-Type", "application/json")
 
 	jsonData, err := json.Marshal(body)
@@ -21,12 +21,12 @@ func respondOK(res *http.ResponseWriter, body interface{}) {
 	}
 }
 
-func respondNotAuthorized(res *http.ResponseWriter) {
+func RespondNotAuthorized(res *http.ResponseWriter) {
 	(*res).Header().Set("Content-Type", "application/json")
 	(*res).WriteHeader(401)
 }
 
-func respondBadRequest(res *http.ResponseWriter, message string) {
+func RespondBadRequest(res *http.ResponseWriter, message string) {
 	(*res).Header().Set("Content-Type", "application/json")
 	(*res).WriteHeader(400)
 
@@ -36,7 +36,7 @@ func respondBadRequest(res *http.ResponseWriter, message string) {
 	}
 }
 
-func respondServerError(res *http.ResponseWriter, message string) {
+func RespondServerError(res *http.ResponseWriter, message string) {
 	(*res).Header().Set("Content-Type", "application/json")
 	(*res).WriteHeader(500)
 

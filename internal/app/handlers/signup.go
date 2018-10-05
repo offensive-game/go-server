@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
+	"go-server/internal/app/middleware"
+	"go-server/internal/app/utils"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )
@@ -14,7 +15,11 @@ type SignupMessage struct {
 }
 
 type Signup struct {
-	Db *sql.DB
+	appContext middleware.AppContext
+}
+
+func (s Signup) SetAppContext(appContext middleware.AppContext) {
+	s.appContext = appContext
 }
 
 func (s Signup) ServeHTTP(res http.ResponseWriter, req *http.Request) {
@@ -30,25 +35,25 @@ func (s Signup) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 	body.Password = string(hash)
 
-	exists, err := userWithCredentialsExist(s, body.Username, body.Password)
+	exists, err := s.userWithCredentialsExist(body.Username, body.Password)
 	if err != nil {
 		panic(err)
 	}
 
 	if exists {
-		respondBadRequest(&res, "User already exists")
+		utils.RespondBadRequest(&res, "User already exists")
 	} else {
-		ok := createNewUser(s, body)
+		ok := s.createNewUser(body)
 		if ok {
-			respondOK(&res, body)
+			utils.RespondOK(&res, body)
 		} else {
-			respondServerError(&res, "Unable to create a new user")
+			utils.RespondServerError(&res, "Unable to create a new user")
 		}
 	}
 }
 
-func userWithCredentialsExist(s Signup, username string, email string) (bool, error) {
-	queryStatement, err := s.Db.Prepare("SELECT COUNT(*) from users WHERE username = $1 OR email = $2")
+func (s Signup) userWithCredentialsExist(username string, email string) (bool, error) {
+	queryStatement, err := s.appContext.DB.Prepare("SELECT COUNT(*) from users WHERE username = $1 OR email = $2")
 	if err != nil {
 		return false, err
 	}
@@ -63,8 +68,8 @@ func userWithCredentialsExist(s Signup, username string, email string) (bool, er
 	return count != 0, nil
 }
 
-func createNewUser(s Signup, signupMessage SignupMessage) bool {
-	query, err := s.Db.Prepare("INSERT INTO users (username, password, email) VALUES($1, $2, $3)")
+func (s Signup) createNewUser(signupMessage SignupMessage) bool {
+	query, err := s.appContext.DB.Prepare("INSERT INTO users (username, password, email) VALUES($1, $2, $3)")
 	if err != nil {
 		return false
 	}

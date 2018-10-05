@@ -5,6 +5,6 @@ while true; do
 #    dlv exec ./main --headless --listen=:2345 --api-version=2 --log &
     dlv debug ./cmd/offensive/main.go --headless --accept-multiclient --listen=:2345 --api-version=2 --log
     echo Waiting for changes
-    inotifywait -r -e modify -e move -e create -e delete ./internal ./cmd ./pkg
+    inotifywait -r -e modify -e move -e create -e delete ./internal ./cmd
     pkill -P $$
 done
