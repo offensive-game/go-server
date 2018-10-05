@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"go-server/internal/app/middleware"
@@ -18,6 +19,7 @@ type LoginMessage struct {
 
 type Login struct {
 	appContext middleware.AppContext
+	tx *sql.Tx
 }
 
 func (l Login) SetAppContext(appContext middleware.AppContext) {
@@ -26,6 +28,8 @@ func (l Login) SetAppContext(appContext middleware.AppContext) {
 
 func (l Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	body := LoginMessage{}
+	l.tx = utils.GetTransactionFromContext(req)
+
 	err := json.NewDecoder(req.Body).Decode(&body)
 	if err != nil {
 		utils.RespondBadRequest(&res, "Bad request")
@@ -70,7 +74,7 @@ func (l Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func (l Login) userIdForCredentials(username string, password string) (int64, error) {
-	statement, err := l.appContext.DB.Prepare("SELECT id, password FROM users WHERE username = $1")
+	statement, err := l.tx.Prepare("SELECT id, password FROM users WHERE username = $1")
 	if err != nil {
 		return 0, err
 	}
@@ -92,15 +96,18 @@ func (l Login) userIdForCredentials(username string, password string) (int64, er
 
 func (l Login) createSession(userId int64) (string, error) {
 	// delete old sessions
-	deleteStmt, err := l.appContext.DB.Prepare("DELETE FROM sessions WHERE userId = $1")
+	deleteStmt, err := l.tx.Prepare("DELETE FROM sessions WHERE userId = $1")
 	if err != nil {
 		return "", err
 	}
 
-	deleteStmt.Exec(userId)
+	_, err = deleteStmt.Exec(userId)
+	if err != nil {
+		return "", err
+	}
 
 	// create new session
-	createStmt, err := l.appContext.DB.Prepare("INSERT INTO sessions (userId, token) VALUES ($1, $2)")
+	createStmt, err := l.tx.Prepare("INSERT INTO sessions (userId, token) VALUES ($1, $2)")
 	if err != nil {
 		return "", err
 	}

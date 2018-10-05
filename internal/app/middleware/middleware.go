@@ -31,8 +31,28 @@ func (appContext AppContext) Chain(method string, handler AppHandler, decorators
 
 		handler.SetAppContext(appContext)
 
+		tx, err := appContext.DB.Begin()
+		if err != nil {
+			utils.RespondServerError(&res, "Server error")
+		}
+
+		newContext := context.WithValue(req.Context(), "tx", tx)
+		defer func() {
+			if r := recover(); r != nil {
+				err := tx.Rollback()
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				err := tx.Commit()
+				if err != nil {
+					panic(err)
+				}
+			}
+		}()
+
 		if numberOfDecorators == 0 {
-			handler.ServeHTTP(res, req)
+			handler.ServeHTTP(res, req.WithContext(newContext))
 		} else {
 			current := http.Handler(handler)
 			for i := len(decorators) - 1; i >= 0; i-- {
@@ -40,14 +60,14 @@ func (appContext AppContext) Chain(method string, handler AppHandler, decorators
 				current = decorator(current, appContext)
 			}
 
-			current.ServeHTTP(res, req)
+			current.ServeHTTP(res, req.WithContext(newContext))
 		}
 	})
 }
 
 func WithUser(handler http.Handler, appContext AppContext) http.HandlerFunc {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		cookie, err := req.Cookie("test-cookie")
+		cookie, err := req.Cookie("offensive-login")
 		if err != nil {
 			utils.RespondNotAuthorized(&res)
 			return

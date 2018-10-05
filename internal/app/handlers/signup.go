@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"go-server/internal/app/middleware"
 	"go-server/internal/app/utils"
@@ -16,6 +17,7 @@ type SignupMessage struct {
 
 type Signup struct {
 	appContext middleware.AppContext
+	tx *sql.Tx
 }
 
 func (s Signup) SetAppContext(appContext middleware.AppContext) {
@@ -23,7 +25,9 @@ func (s Signup) SetAppContext(appContext middleware.AppContext) {
 }
 
 func (s Signup) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	s.tx = utils.GetTransactionFromContext(req)
 	body := SignupMessage{}
+
 	err := json.NewDecoder(req.Body).Decode(&body)
 	if err != nil {
 		panic(err)
@@ -53,7 +57,7 @@ func (s Signup) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func (s Signup) userWithCredentialsExist(username string, email string) (bool, error) {
-	queryStatement, err := s.appContext.DB.Prepare("SELECT COUNT(*) from users WHERE username = $1 OR email = $2")
+	queryStatement, err := s.tx.Prepare("SELECT COUNT(*) from users WHERE username = $1 OR email = $2")
 	if err != nil {
 		return false, err
 	}
@@ -69,7 +73,7 @@ func (s Signup) userWithCredentialsExist(username string, email string) (bool, e
 }
 
 func (s Signup) createNewUser(signupMessage SignupMessage) bool {
-	query, err := s.appContext.DB.Prepare("INSERT INTO users (username, password, email) VALUES($1, $2, $3)")
+	query, err := s.tx.Prepare("INSERT INTO users (username, password, email) VALUES($1, $2, $3)")
 	if err != nil {
 		return false
 	}

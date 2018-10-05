@@ -1,14 +1,20 @@
 package handlers
 
 import (
-	"database/sql"
+	"go-server/internal/app/middleware"
+	"go-server/internal/app/utils"
 	"net/http"
 )
 
 type Me struct {
-	Db *sql.DB
+	appContext middleware.AppContext
 }
 
-func (me *Me) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (me Me) SetAppContext(appContext middleware.AppContext) {
+	me.appContext = appContext
+}
 
+func (me Me) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	user := utils.GetuserFromContext(req)
+	utils.RespondOK(&res, user)
 }
