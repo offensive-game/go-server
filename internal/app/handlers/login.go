@@ -22,11 +22,11 @@ type Login struct {
 	tx *sql.Tx
 }
 
-func (l Login) SetAppContext(appContext middleware.AppContext) {
+func (l *Login) SetAppContext(appContext middleware.AppContext) {
 	l.appContext = appContext
 }
 
-func (l Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (l *Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	body := LoginMessage{}
 	l.tx = utils.GetTransactionFromContext(req)
 

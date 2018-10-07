@@ -20,11 +20,11 @@ type Signup struct {
 	tx *sql.Tx
 }
 
-func (s Signup) SetAppContext(appContext middleware.AppContext) {
+func (s *Signup) SetAppContext(appContext middleware.AppContext) {
 	s.appContext = appContext
 }
 
-func (s Signup) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (s *Signup) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	s.tx = utils.GetTransactionFromContext(req)
 	body := SignupMessage{}
 
@@ -49,6 +49,7 @@ func (s Signup) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	} else {
 		ok := s.createNewUser(body)
 		if ok {
+			body.Password = ""
 			utils.RespondOK(&res, body)
 		} else {
 			utils.RespondServerError(&res, "Unable to create a new user")

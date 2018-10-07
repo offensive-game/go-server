@@ -11,7 +11,7 @@ func GetTransactionFromContext (req *http.Request) *sql.Tx {
 	return tx
 }
 
-func GetuserFromContext(req *http.Request) models.User {
-	user := req.Context().Value("tx").(models.User)
+func GetUserFromContext(req *http.Request) models.User {
+	user := req.Context().Value("user").(models.User)
 	return user
 }
