@@ -8,16 +8,18 @@ import (
 
 func RespondOK(res *http.ResponseWriter, body interface{}) {
 	(*res).Header().Set("Content-Type", "application/json")
-
-	jsonData, err := json.Marshal(body)
-	if err != nil {
-		panic(err)
-	}
-
 	(*res).WriteHeader(200)
-	_, err = (*res).Write(jsonData)
-	if err != nil {
-		panic(err)
+
+	if body != nil {
+		jsonData, err := json.Marshal(body)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = (*res).Write(jsonData)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

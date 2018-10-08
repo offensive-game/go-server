@@ -25,7 +25,7 @@ func (appContext AppContext) Chain(method string, handler AppHandler, decorators
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		numberOfDecorators := len(decorators)
 
-		if req.Method != method {
+		if !utils.ContainsMethods(method, req.Method) {
 			return
 		}
 

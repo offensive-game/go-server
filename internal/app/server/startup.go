@@ -43,9 +43,9 @@ func setUpHandlers(db *sql.DB) {
 	// Account handlers
 	http.Handle("/signup", appContext.Chain("POST", &handlers.Signup{}))
 	http.Handle("/login", appContext.Chain("POST", &handlers.Login{}))
+	http.Handle("/signout", appContext.Chain("POST", &handlers.Signout{}, middleware.WithUser))
 
 	// User/games management handlers
 	http.Handle("/me", appContext.Chain("GET", &handlers.Me{}, middleware.WithUser))
-	http.Handle("/game", appContext.Chain("POST", &handlers.CreateGame{}, middleware.WithUser))
-	http.Handle("/game", appContext.Chain("GET", &handlers.LoadGames{}, middleware.WithUser))
+	http.Handle("/game", appContext.Chain("POST,GET", &handlers.GameRequests{}, middleware.WithUser))
 }
