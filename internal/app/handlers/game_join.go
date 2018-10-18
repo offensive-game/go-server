@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"github.com/sirupsen/logrus"
 	"go-server/internal/app/middleware"
-	"go-server/internal/app/models"
 	"go-server/internal/app/utils"
 	"net/http"
 )
@@ -14,7 +13,7 @@ type JoinGame struct {
 	gameToJoin string
 	tx *sql.Tx
 	log *logrus.Entry
-	user models.User
+	user utils.User
 }
 
 func (g *JoinGame) SetAppContext(appContext middleware.AppContext) {
@@ -34,7 +33,7 @@ func (g *JoinGame) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	gameExists := g.gameExists()
 
 	if !gameExists {
-		
+
 	}
 }
 

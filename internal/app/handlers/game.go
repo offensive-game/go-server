@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"go-server/internal/app/handlers/game_handlers"
 	"go-server/internal/app/middleware"
 	"net/http"
 	"strings"

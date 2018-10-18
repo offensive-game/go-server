@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"github.com/sirupsen/logrus"
-	"go-server/internal/app/models"
 	"go-server/internal/app/utils"
 	"net/http"
 )
@@ -80,7 +79,7 @@ func WithUser(handler http.Handler, appContext AppContext) http.HandlerFunc {
 		}
 
 		row := statement.QueryRow(token)
-		var user models.User
+		var user utils.User
 
 		err = row.Scan(&user.Id, &user.Username)
 		if err != nil {

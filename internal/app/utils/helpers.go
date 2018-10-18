@@ -2,7 +2,6 @@ package utils
 
 import (
 	"database/sql"
-	"go-server/internal/app/models"
 	"net/http"
 	"strings"
 	"time"
@@ -13,8 +12,8 @@ func GetTransactionFromContext (req *http.Request) *sql.Tx {
 	return tx
 }
 
-func GetUserFromContext(req *http.Request) models.User {
-	user := req.Context().Value("user").(models.User)
+func GetUserFromContext(req *http.Request) User {
+	user := req.Context().Value("user").(User)
 	return user
 }
 
