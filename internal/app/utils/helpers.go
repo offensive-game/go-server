@@ -2,6 +2,8 @@ package utils
 
 import (
 	"database/sql"
+	"errors"
+	"go-server/internal/app/config"
 	"net/http"
 	"strings"
 	"time"
@@ -31,4 +33,22 @@ func ContainsMethods (methodsList string, method string) bool {
 
 func ToMillisecondsTimestamp (convertingTime time.Time) int64 {
 	return convertingTime.UnixNano() / int64(time.Millisecond)
+}
+
+func GetRandomColor(assignedColors []string) (string, error) {
+	for _, color := range config.COLORS() {
+		found := false
+		for _, assigned := range assignedColors {
+			if assigned == color {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return color, nil
+		}
+	}
+
+	return "", errors.New("cant find color")
 }
