@@ -9,3 +9,8 @@ type JoinGameResponse struct {
 	PlayerId int64       `json:"player_id"`
 	Players []Player     `json:"players"`
 }
+
+type WebsocketNotification struct {
+	Type string `json:"type"`
+	Payload interface{} `json:"payload"`
+}

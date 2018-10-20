@@ -41,7 +41,7 @@ func (g *JoinGame) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	gameManager, exists := game.GamesDictionary[currentGame.Id]
 	if !exists {
-		gameManager = game.NewGame(currentGame.Id)
+		gameManager = game.NewGame(currentGame)
 	}
 
 	gameManager.JoinGameMutex.Lock()
@@ -181,8 +181,8 @@ func (g *JoinGame) buildResponse(res *http.ResponseWriter, currentGame models.Ga
 	utils.RespondOK(res, response)
 }
 
-func alreadyJoined(playes []models.Player, username string) bool {
-	for _, player := range playes {
+func alreadyJoined(players []models.Player, username string) bool {
+	for _, player := range players {
 		if player.Name == username {
 			return true
 		}
