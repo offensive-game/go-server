@@ -27,7 +27,6 @@ func StartUpServer(cfg config.Config) {
 	defer db.Close()
 
 	setUpHandlers(db)
-	setUpWebSocket()
 
 	log.Info(fmt.Sprintf("Starting server on port %s", cfg.Port))
 	err := http.ListenAndServeTLS(cfg.Port, "offensive.local.crt", "offensive.local.key", nil)
@@ -42,6 +41,9 @@ func setUpHandlers(db *sql.DB) {
 	// Health check
 	http.Handle("/hc", appContext.Chain("GET", &handlers.HealthCheck{}))
 
+	// WebSocket handler
+	http.Handle("/ws", appContext.Chain("GET", &handlers.WebsocketOpen{}))
+
 	// Account handlers
 	http.Handle("/signup", appContext.Chain("POST", &handlers.Signup{}))
 	http.Handle("/login", appContext.Chain("POST", &handlers.Login{}))
@@ -51,8 +53,4 @@ func setUpHandlers(db *sql.DB) {
 	http.Handle("/me", appContext.Chain("GET", &handlers.Me{}, middleware.WithUser))
 	http.Handle("/game", appContext.Chain("POST,GET", &handlers.GameRequests{}, middleware.WithUser))
 	http.Handle("/game/", appContext.Chain("POST,GET", &handlers.GameRequests{}, middleware.WithUser))
-}
-
-func setUpWebSocket () {
-
 }
