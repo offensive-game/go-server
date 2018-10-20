@@ -9,7 +9,6 @@ import (
 	"go-server/internal/app/models"
 	"go-server/internal/app/utils"
 	"net/http"
-	"time"
 )
 
 type JoinGame struct {
@@ -18,13 +17,6 @@ type JoinGame struct {
 	tx         *sql.Tx
 	log        *logrus.Entry
 	user       utils.User
-}
-
-type GameModel struct {
-	Id           int64
-	PlayersCount int8
-	Name         string
-	StartTime    time.Time
 }
 
 func (g *JoinGame) SetAppContext(appContext middleware.AppContext) {
@@ -61,8 +53,28 @@ func (g *JoinGame) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if len(players) == config.MAX_NUMBER_PLAYERS {
-		utils.RespondBadRequest(&res, "all players has already joined")
+	if alreadyJoined(players, g.user.Username) {
+		g.respondWithAlreadyJoined(&res, currentGame, players)
+	} else {
+		g.addNewPlayerToGame(&res, currentGame, players)
+	}
+}
+
+func (g *JoinGame) respondWithAlreadyJoined(res *http.ResponseWriter, currentGame models.GameModel, players []models.Player) {
+	var me models.Player
+	for _, player := range players {
+		if player.Name == g.user.Username {
+			me = player
+			break
+		}
+	}
+
+	g.buildResponse(res, currentGame, me.Color, me.Id, players)
+}
+
+func (g *JoinGame) addNewPlayerToGame(res *http.ResponseWriter, currentGame models.GameModel, players []models.Player) {
+	if len(players) == config.MAX_NUMBER_PLAYERS-1 {
+		utils.RespondBadRequest(res, "all players has already joined")
 		return
 	}
 
@@ -76,11 +88,14 @@ func (g *JoinGame) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 
 	newId, err := g.addNewPlayer(currentGame, newColor)
-	g.buildResponse(&res, currentGame, newColor, newId, players)
+
+	players = append(players, models.Player{Name: g.user.Username, Id: newId, Color: newColor,})
+
+	g.buildResponse(res, currentGame, newColor, newId, players)
 }
 
-func (g *JoinGame) getGame() (GameModel, error) {
-	var currentGame GameModel
+func (g *JoinGame) getGame() (models.GameModel, error) {
+	var currentGame models.GameModel
 
 	statement, err := g.tx.Prepare(`
 		SELECT id, players_count, name, start_time FROM games WHERE id = $1
@@ -100,8 +115,8 @@ func (g *JoinGame) getGame() (GameModel, error) {
 	return currentGame, nil
 }
 
-func (g *JoinGame) getPlayersForGame() ([]models.PlayerModel, error) {
-	players := make([]models.PlayerModel, 0, config.MAX_NUMBER_PLAYERS)
+func (g *JoinGame) getPlayersForGame() ([]models.Player, error) {
+	players := make([]models.Player, 0, config.MAX_NUMBER_PLAYERS)
 
 	statement, err := g.tx.Prepare(`
 		SELECT p.id, p.color, u.username FROM players p INNER JOIN users u ON u.id = p.userId WHERE p.gameId = $1
@@ -117,7 +132,7 @@ func (g *JoinGame) getPlayersForGame() ([]models.PlayerModel, error) {
 	}
 
 	for rows.Next() {
-		var player models.PlayerModel
+		var player models.Player
 
 		err = rows.Scan(&player.Id, &player.Color, &player.Name)
 
@@ -131,7 +146,7 @@ func (g *JoinGame) getPlayersForGame() ([]models.PlayerModel, error) {
 	return players, nil
 }
 
-func (g *JoinGame) addNewPlayer(game GameModel, color string) (int64, error) {
+func (g *JoinGame) addNewPlayer(game models.GameModel, color string) (int64, error) {
 	statement, err := g.tx.Prepare(`
 		INSERT INTO players (userId, gameId, color) VALUES ($1, $2, $3) RETURNING id
 	`)
@@ -152,7 +167,7 @@ func (g *JoinGame) addNewPlayer(game GameModel, color string) (int64, error) {
 	return newId, nil
 }
 
-func (g *JoinGame) buildResponse(res *http.ResponseWriter, currentGame GameModel, myColor string, myId int64, players []models.PlayerModel) {
+func (g *JoinGame) buildResponse(res *http.ResponseWriter, currentGame models.GameModel, myColor string, myId int64, players []models.Player) {
 	response := models.JoinGameResponse{
 		GameId:          currentGame.Id,
 		StartTime:       utils.ToMillisecondsTimestamp(currentGame.StartTime),
@@ -164,4 +179,14 @@ func (g *JoinGame) buildResponse(res *http.ResponseWriter, currentGame GameModel
 	}
 
 	utils.RespondOK(res, response)
+}
+
+func alreadyJoined(playes []models.Player, username string) bool {
+	for _, player := range playes {
+		if player.Name == username {
+			return true
+		}
+	}
+
+	return false
 }
