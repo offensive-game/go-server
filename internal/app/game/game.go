@@ -43,7 +43,7 @@ func (m Manager) Run() {
 	m.WaitingToJoin()
 }
 
-func (m Manager) sentToAllExcept(message interface{}, playerId int64) {
+func (m Manager) sendToAllExcept(message interface{}, playerId int64) {
 	m.logger.Info("sendToAllExcept")
 	for id, socket := range m.Sockets {
 		if id != playerId {

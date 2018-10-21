@@ -39,7 +39,7 @@ func (m *Manager) newPlayerJoined(command Command) bool {
 		Type: "OPPONENT_JOINED_SUCCESS",
 		Payload: joinCommand.Player,
 	}
-	m.sentToAllExcept(opponentJoinedMessage, joinCommand.Player.Id)
+	m.sendToAllExcept(opponentJoinedMessage, joinCommand.Player.Id)
 	m.joined++
 
 	return m.joined == m.GameModel.PlayersCount
