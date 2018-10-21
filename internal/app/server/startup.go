@@ -26,6 +26,7 @@ func StartUpServer(cfg config.Config) {
 	}
 	defer db.Close()
 
+	clearUp(db)
 	setUpHandlers(db)
 
 	log.Info(fmt.Sprintf("Starting server on port %s", cfg.Port))
@@ -36,7 +37,7 @@ func StartUpServer(cfg config.Config) {
 }
 
 func setUpHandlers(db *sql.DB) {
-	appContext := middleware.AppContext{DB:db, Logger: log.New()}
+	appContext := middleware.AppContext{DB: db, Logger: log.New()}
 
 	// Health check
 	http.Handle("/hc", appContext.Chain("GET", &handlers.HealthCheck{}))
@@ -53,4 +54,8 @@ func setUpHandlers(db *sql.DB) {
 	http.Handle("/me", appContext.Chain("GET", &handlers.Me{}, middleware.WithUser))
 	http.Handle("/game", appContext.Chain("POST,GET", &handlers.GameRequests{}, middleware.WithUser))
 	http.Handle("/game/", appContext.Chain("POST,GET", &handlers.GameRequests{}, middleware.WithUser))
+}
+
+func clearUp(db *sql.DB) {
+	db.Exec("DELETE FROM games")
 }

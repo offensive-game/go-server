@@ -21,7 +21,7 @@ func (m Manager) WaitingToJoin() {
 					}
 				}
 			}
-		case <-time.After(1000 * time.Second):
+		case <-time.After(100000 * time.Second):
 			{
 				m.timeoutForJoining()
 				break

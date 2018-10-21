@@ -69,5 +69,6 @@ func (w *WebsocketOpen) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	command := models.PlayerJoined{Command: config.ORDER_JOIN, Player: player, Connection: conn}
 
+	gameManager.Sockets[player.Id] = conn
 	gameManager.Input <- command
 }

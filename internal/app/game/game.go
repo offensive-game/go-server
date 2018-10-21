@@ -39,13 +39,14 @@ func NewGame(currentGame models.GameModel) Manager {
 	return newManager
 }
 
-func (m Manager) Run() {
+func (m *Manager) Run() {
 	m.WaitingToJoin()
 }
 
-func (m Manager) sendToAllExcept(message interface{}, playerId int64) {
+func (m *Manager) sendToAllExcept(message interface{}, playerId int64) {
 	m.logger.Info("sendToAllExcept")
 	for id, socket := range m.Sockets {
+		m.logger.Info("Sending to all in sockets")
 		if id != playerId {
 			m.logger.Info("sending...")
 			err := socket.WriteJSON(message)
