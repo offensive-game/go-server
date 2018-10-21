@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"go-server/internal/app/middleware"
 	"net/http"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 type GameRequests struct {
 	appContext middleware.AppContext
+	DB         *sql.DB
 }
 
 func (gr *GameRequests) SetAppContext(appContext middleware.AppContext) {
@@ -24,7 +26,7 @@ func (gr *GameRequests) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		if len(path) == 1 {
 			handler = &LoadGames{}
 		} else {
-			handler = &JoinGame{gameToJoin: path[1]}
+			handler = &JoinGame{gameToJoin: path[1], DB: gr.DB}
 		}
 
 	}

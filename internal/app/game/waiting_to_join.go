@@ -1,14 +1,15 @@
 package game
 
 import (
-	"fmt"
 	"go-server/internal/app/config"
 	"go-server/internal/app/models"
 	"time"
 )
 
-func (m Manager) WaitingToJoin() {
+func (m Manager) WaitingToJoin() bool {
 	m.logger.Info("WAITING TO JOIN")
+
+	waitTime := m.GameModel.StartTime.Sub(time.Now())
 	for true {
 		select {
 		case joined := <-m.Input:
@@ -17,18 +18,18 @@ func (m Manager) WaitingToJoin() {
 				if joined.Order() == config.ORDER_JOIN {
 					full := m.newPlayerJoined(joined)
 					if full {
-						break
+						return true
 					}
 				}
 			}
-		case <-time.After(100000 * time.Second):
+		case <-time.After(waitTime):
 			{
-				m.timeoutForJoining()
-				break
+				return false
 			}
 		}
 	}
 
+	return false
 }
 
 func (m *Manager) newPlayerJoined(command Command) bool {
@@ -43,8 +44,4 @@ func (m *Manager) newPlayerJoined(command Command) bool {
 	m.joined++
 
 	return m.joined == m.GameModel.PlayersCount
-}
-
-func (m Manager) timeoutForJoining() {
-	fmt.Println("TIMEOUT")
 }

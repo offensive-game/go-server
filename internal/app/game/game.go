@@ -1,6 +1,7 @@
 package game
 
 import (
+	"database/sql"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"go-server/internal/app/models"
@@ -14,6 +15,7 @@ type Manager struct {
 	Sockets       map[int64]*websocket.Conn
 	joined        int8
 	logger        *log.Entry
+	db            *sql.DB
 }
 
 type Command interface {
@@ -22,13 +24,14 @@ type Command interface {
 
 var GamesDictionary = make(map[int64]Manager)
 
-func NewGame(currentGame models.GameModel) Manager {
+func NewGame(currentGame models.GameModel, db *sql.DB) Manager {
 	sockets := make(map[int64]*websocket.Conn)
 	newManager := Manager{
-		GameModel: currentGame,
+		GameModel:     currentGame,
 		JoinGameMutex: &sync.Mutex{},
-		Input: make(chan Command),
-		Sockets: sockets,
+		Input:         make(chan Command),
+		Sockets:       sockets,
+		db:            db,
 	}
 	newManager.logger = log.WithFields(log.Fields{"gameId": currentGame.Id})
 
@@ -40,15 +43,18 @@ func NewGame(currentGame models.GameModel) Manager {
 }
 
 func (m *Manager) Run() {
-	m.WaitingToJoin()
+	playersJoined := m.WaitingToJoin()
+
+	if !playersJoined {
+		m.endGame()
+		return
+	}
 }
 
 func (m *Manager) sendToAllExcept(message interface{}, playerId int64) {
-	m.logger.Info("sendToAllExcept")
+	m.logger.Debug("sendToAllExcept")
 	for id, socket := range m.Sockets {
-		m.logger.Info("Sending to all in sockets")
 		if id != playerId {
-			m.logger.Info("sending...")
 			err := socket.WriteJSON(message)
 			if err != nil {
 				m.logger.Info(err)

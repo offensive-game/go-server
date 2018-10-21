@@ -17,6 +17,7 @@ type JoinGame struct {
 	tx         *sql.Tx
 	log        *logrus.Entry
 	user       utils.User
+	DB         *sql.DB
 }
 
 func (g *JoinGame) SetAppContext(appContext middleware.AppContext) {
@@ -41,7 +42,7 @@ func (g *JoinGame) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	gameManager, exists := game.GamesDictionary[currentGame.Id]
 	if !exists {
-		gameManager = game.NewGame(currentGame)
+		gameManager = game.NewGame(currentGame, g.DB)
 	}
 
 	gameManager.JoinGameMutex.Lock()
