@@ -68,7 +68,7 @@ func (cg CreateGame) createNewGame (tx *sql.Tx, newGame Game) Game {
 		panic(err)
 	}
 
-	gameStart := time.Now().Add(startDuration)
+	gameStart := time.Now().UTC().Add(startDuration)
 	row := statement.QueryRow(newGame.Name, newGame.NumberOfPlayers, gameStart)
 
 	var newId int64

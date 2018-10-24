@@ -7,5 +7,8 @@ func COLORS() [MAX_NUMBER_PLAYERS]string {
 }
 
 const ALL_PLAYERS = -1
+const INITIAL_NUMBER_OF_UNITS = 10
+
+const DEPLOYMENT_DURATION = 60
 
 const ORDER_JOIN = "JOIN"

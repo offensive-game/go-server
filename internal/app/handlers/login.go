@@ -60,7 +60,7 @@ func (l *Login) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	cookie := http.Cookie{
 		Name: "offensive-login",
-		Expires: time.Now().AddDate(0, 1, 0),
+		Expires: time.Now().UTC().AddDate(0, 1, 0),
 		Value: session,
 		Path: "/",
 	}
@@ -112,7 +112,7 @@ func (l Login) createSession(userId int64) (string, error) {
 		return "", err
 	}
 
-	tokenBase := fmt.Sprintf("%d%d", userId, time.Now().Nanosecond())
+	tokenBase := fmt.Sprintf("%d%d", userId, time.Now().UTC().Nanosecond())
 	hash, err := bcrypt.GenerateFromPassword([]byte(tokenBase), bcrypt.MinCost)
 	hashString := string(hash)
 

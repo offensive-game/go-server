@@ -64,13 +64,13 @@ func (g *JoinGame) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 func (g *JoinGame) respondWithAlreadyJoined(res *http.ResponseWriter, currentGame models.GameModel, players []models.Player) {
 	var me models.Player
 	for _, player := range players {
-		if player.Name == g.user.Username {
+		if player.PlayerName() == g.user.Username {
 			me = player
 			break
 		}
 	}
 
-	g.buildResponse(res, currentGame, me.Color, me.Id, players)
+	g.buildResponse(res, currentGame, me.PlayerColor(), me.PlayerId(), players)
 }
 
 func (g *JoinGame) addNewPlayerToGame(res *http.ResponseWriter, currentGame models.GameModel, players []models.Player) {
@@ -81,7 +81,7 @@ func (g *JoinGame) addNewPlayerToGame(res *http.ResponseWriter, currentGame mode
 
 	assignedColors := make([]string, len(players))
 	for i, player := range players {
-		assignedColors[i] = player.Color
+		assignedColors[i] = player.PlayerColor()
 	}
 	newColor, err := utils.GetRandomColor(assignedColors[:])
 	if err != nil {
@@ -90,7 +90,7 @@ func (g *JoinGame) addNewPlayerToGame(res *http.ResponseWriter, currentGame mode
 
 	newId, err := g.addNewPlayer(currentGame, newColor)
 
-	players = append(players, models.Player{Name: g.user.Username, Id: newId, Color: newColor,})
+	players = append(players, models.Human{Name: g.user.Username, Id: newId, Color: newColor,})
 
 	g.buildResponse(res, currentGame, newColor, newId, players)
 }
@@ -133,7 +133,7 @@ func (g *JoinGame) getPlayersForGame() ([]models.Player, error) {
 	}
 
 	for rows.Next() {
-		var player models.Player
+		var player models.Human
 
 		err = rows.Scan(&player.Id, &player.Color, &player.Name)
 
@@ -184,7 +184,7 @@ func (g *JoinGame) buildResponse(res *http.ResponseWriter, currentGame models.Ga
 
 func alreadyJoined(players []models.Player, username string) bool {
 	for _, player := range players {
-		if player.Name == username {
+		if player.PlayerName() == username {
 			return true
 		}
 	}

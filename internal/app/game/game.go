@@ -2,8 +2,8 @@ package game
 
 import (
 	"database/sql"
-	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
+	"go-server/internal/app/bot"
 	"go-server/internal/app/models"
 	"sync"
 )
@@ -11,27 +11,24 @@ import (
 type Manager struct {
 	JoinGameMutex *sync.Mutex
 	GameModel     models.GameModel
-	Input         chan Command
-	Sockets       map[int64]*websocket.Conn
+	Input         chan models.Command
+	Players       map[int64]models.Player
 	joined        int8
 	logger        *log.Entry
 	db            *sql.DB
 }
 
-type Command interface {
-	Order() string
-}
-
 var GamesDictionary = make(map[int64]Manager)
 
 func NewGame(currentGame models.GameModel, db *sql.DB) Manager {
-	sockets := make(map[int64]*websocket.Conn)
+	players := make(map[int64]models.Player)
+
 	newManager := Manager{
 		GameModel:     currentGame,
 		JoinGameMutex: &sync.Mutex{},
-		Input:         make(chan Command),
-		Sockets:       sockets,
+		Input:         make(chan models.Command),
 		db:            db,
+		Players:       players,
 	}
 	newManager.logger = log.WithFields(log.Fields{"gameId": currentGame.Id})
 
@@ -43,22 +40,53 @@ func NewGame(currentGame models.GameModel, db *sql.DB) Manager {
 }
 
 func (m *Manager) Run() {
-	playersJoined := m.WaitingToJoin()
+	var err error
 
-	if !playersJoined {
-		m.endGame()
+	defer func() {
+		for _, player := range m.Players {
+			if player.PlayerType() == models.BotType {
+				botPlayer := player.(models.Bot)
+				botPlayer.Input <- bot.COMMAND_KILL
+			}
+		}
+		if err != nil {
+			m.endGame()
+		}
+	}()
+
+	// Waiting to join
+	m.WaitingToJoin()
+
+	err = m.initializeMap()
+	if err != nil {
 		return
+	}
+
+	m.sendGameStartMessage()
+	m.sendGameStatus()
+
+	// Deployment
+	m.Deployment()
+
+}
+
+func (m *Manager) sendToAllExcept(message models.WebsocketNotification, playerId int64) {
+	m.logger.Debug("sendToAllExcept")
+	for id, player := range m.Players {
+		if id == playerId {
+			continue
+		}
+		m.logger.WithField("message", message).Debug("sending message")
+		player.SendMessage(message)
 	}
 }
 
-func (m *Manager) sendToAllExcept(message interface{}, playerId int64) {
-	m.logger.Debug("sendToAllExcept")
-	for id, socket := range m.Sockets {
-		if id != playerId {
-			err := socket.WriteJSON(message)
-			if err != nil {
-				m.logger.Info(err)
-			}
-		}
+func (m Manager) getPlayersSlice() []models.Player {
+	playersSlice := make([]models.Player, 0)
+
+	for _, player := range m.Players {
+		playersSlice = append(playersSlice, player)
 	}
+
+	return playersSlice
 }

@@ -54,7 +54,7 @@ func (w *WebsocketOpen) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	row := statement.QueryRow(token[0])
 
-	var player models.Player
+	var player models.Human
 	var gameId int64
 
 	err = row.Scan(&player.Id, &player.Color, &player.Name, &gameId)
@@ -69,6 +69,6 @@ func (w *WebsocketOpen) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	command := models.PlayerJoined{Command: config.ORDER_JOIN, Player: player, Connection: conn}
 
-	gameManager.Sockets[player.Id] = conn
+	gameManager.Players[player.PlayerId()] = player
 	gameManager.Input <- command
 }

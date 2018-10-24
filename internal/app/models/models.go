@@ -2,10 +2,9 @@ package models
 
 import "time"
 
-type Player struct {
-	Id    int64  `json:"id"`
-	Name  string `json:"name"`
-	Color string `json:"color"`
+type Land struct {
+	Name          string `json:"name"`
+	NumberOfUnits int    `json:"number_of_units"`
 }
 
 type GameModel struct {
@@ -14,4 +13,3 @@ type GameModel struct {
 	Name         string
 	StartTime    time.Time
 }
-
