@@ -27,7 +27,7 @@ func (m Manager) sendGameStatus() error {
 	}
 
 	m.sendToAllExcept(models.WebsocketNotification{
-		Type:    "PHASE_ADVANCE_SUCCESS",
+		Type:    models.PHASE_ADVANCE_SUCCESS,
 		Payload: gameStatus,
 	}, config.ALL_PLAYERS)
 
@@ -70,8 +70,8 @@ func (m Manager) selectPlayers() ([]models.PlayerStatus, error) {
 	}
 
 	stmt, err := m.db.Prepare(
-		`SELECT r.land, r.playerId, r.troops 
-		FROM rounds r INNER JOIN players p ON p.id = r.playerId
+		`SELECT b.land, b.playerId, b.troops 
+		FROM board b INNER JOIN players p ON p.id = b.playerId
 		WHERE p.gameId = $1`)
 
 	if err != nil {

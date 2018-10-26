@@ -90,7 +90,12 @@ func (g *JoinGame) addNewPlayerToGame(res *http.ResponseWriter, currentGame mode
 
 	newId, err := g.addNewPlayer(currentGame, newColor)
 
-	players = append(players, models.Human{Name: g.user.Username, Id: newId, Color: newColor,})
+	players = append(players, &models.Human{
+		Name: g.user.Username,
+		Id: newId,
+		Color: newColor,
+		UnitsInReserve: config.INITIAL_NUMBER_OF_UNITS,
+	})
 
 	g.buildResponse(res, currentGame, newColor, newId, players)
 }
@@ -120,7 +125,7 @@ func (g *JoinGame) getPlayersForGame() ([]models.Player, error) {
 	players := make([]models.Player, 0, config.MAX_NUMBER_PLAYERS)
 
 	statement, err := g.tx.Prepare(`
-		SELECT p.id, p.color, u.username FROM players p INNER JOIN users u ON u.id = p.userId WHERE p.gameId = $1
+		SELECT p.id, p.color, u.username, p.units_in_reserve FROM players p INNER JOIN users u ON u.id = p.userId WHERE p.gameId = $1
 	`)
 
 	if err != nil {
@@ -135,13 +140,13 @@ func (g *JoinGame) getPlayersForGame() ([]models.Player, error) {
 	for rows.Next() {
 		var player models.Human
 
-		err = rows.Scan(&player.Id, &player.Color, &player.Name)
+		err = rows.Scan(&player.Id, &player.Color, &player.Name, &player.UnitsInReserve)
 
 		if err != nil {
 			return players, err
 		}
 
-		players = append(players, player)
+		players = append(players, &player)
 	}
 
 	return players, nil
@@ -149,14 +154,14 @@ func (g *JoinGame) getPlayersForGame() ([]models.Player, error) {
 
 func (g *JoinGame) addNewPlayer(game models.GameModel, color string) (int64, error) {
 	statement, err := g.tx.Prepare(`
-		INSERT INTO players (userId, gameId, color) VALUES ($1, $2, $3) RETURNING id
+		INSERT INTO players (userId, gameId, color, units_in_reserve) VALUES ($1, $2, $3, $4) RETURNING id
 	`)
 
 	if err != nil {
 		return 0, err
 	}
 
-	row := statement.QueryRow(g.user.Id, game.Id, color)
+	row := statement.QueryRow(g.user.Id, game.Id, color, config.INITIAL_NUMBER_OF_UNITS)
 
 	var newId int64
 	err = row.Scan(&newId)

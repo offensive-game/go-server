@@ -3,7 +3,6 @@ package game
 import (
 	"database/sql"
 	log "github.com/sirupsen/logrus"
-	"go-server/internal/app/bot"
 	"go-server/internal/app/models"
 	"sync"
 )
@@ -45,8 +44,7 @@ func (m *Manager) Run() {
 	defer func() {
 		for _, player := range m.Players {
 			if player.PlayerType() == models.BotType {
-				botPlayer := player.(models.Bot)
-				botPlayer.Input <- bot.COMMAND_KILL
+				player.SendMessage(models.WebsocketNotification{Type: models.COMMAND_KILL})
 			}
 		}
 		if err != nil {
@@ -63,7 +61,6 @@ func (m *Manager) Run() {
 	}
 
 	m.sendGameStartMessage()
-	m.sendGameStatus()
 
 	// Deployment
 	m.Deployment()

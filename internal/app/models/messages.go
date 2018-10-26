@@ -1,5 +1,18 @@
 package models
 
+const (
+	GAME_ENDED_NO_PLAYERS_SUCCESS = "GAME_ENDED_NO_PLAYERS_SUCCESS"
+	COMMAND_KILL                  = "COMMAND_KILL"
+	PHASE_ADVANCE_SUCCESS         = "PHASE_ADVANCE_SUCCESS"
+	OPPONENT_JOINED_SUCCESS       = "OPPONENT_JOINED_SUCCESS"
+	GAME_START_SUCCESS            = "GAME_START_SUCCESS"
+)
+
+type WebsocketNotification struct {
+	Type    string      `json:"type"`
+	Payload interface{} `json:"payload"`
+}
+
 type JoinGameResponse struct {
 	GameId          int64    `json:"game_id"`
 	StartTime       int64    `json:"start_time"`
@@ -8,11 +21,6 @@ type JoinGameResponse struct {
 	Color           string   `json:"color"`
 	PlayerId        int64    `json:"player_id"`
 	Players         []Player `json:"players"`
-}
-
-type WebsocketNotification struct {
-	Type    string      `json:"type"`
-	Payload interface{} `json:"payload"`
 }
 
 type PlayerStatus struct {

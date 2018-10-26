@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/gorilla/websocket"
-	"go-server/internal/app/config"
 	"go-server/internal/app/game"
 	"go-server/internal/app/middleware"
 	"go-server/internal/app/models"
@@ -41,7 +40,7 @@ func (w *WebsocketOpen) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	tx := utils.GetTransactionFromContext(req)
 
 	statement, err := tx.Prepare(`
-		SELECT p.id, p.color, u.username, p.gameId 
+		SELECT p.id, p.color, u.username, p.units_in_reserve, p.gameId 
 		FROM sessions s 
 		INNER JOIN players p ON p.userId = s.userId 
 		INNER JOIN users u ON u.id = p.userId 
@@ -57,7 +56,7 @@ func (w *WebsocketOpen) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	var player models.Human
 	var gameId int64
 
-	err = row.Scan(&player.Id, &player.Color, &player.Name, &gameId)
+	err = row.Scan(&player.Id, &player.Color, &player.Name, &player.UnitsInReserve, &gameId)
 	if err != nil {
 		panic(err)
 	}
@@ -67,8 +66,8 @@ func (w *WebsocketOpen) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		panic("Can't find game with id")
 	}
 
-	command := models.PlayerJoined{Command: config.ORDER_JOIN, Player: player, Connection: conn}
+	command := models.PlayerJoined{Player: &player, Connection: conn}
 
-	gameManager.Players[player.PlayerId()] = player
+	gameManager.Players[player.PlayerId()] = &player
 	gameManager.Input <- command
 }

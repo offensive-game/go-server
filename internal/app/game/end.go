@@ -31,7 +31,7 @@ func (m Manager) endGame() {
 	}
 
 	notification := models.WebsocketNotification{
-		Type: "GAME_ENDED_NO_PLAYERS_SUCCESS",
+		Type: models.GAME_ENDED_NO_PLAYERS_SUCCESS,
 		Payload: nil,
 	}
 	m.sendToAllExcept(notification, config.ALL_PLAYERS)

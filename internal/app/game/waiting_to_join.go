@@ -30,8 +30,8 @@ func (m *Manager) WaitingToJoin() {
 				botsNeeded := m.GameModel.PlayersCount - m.joined
 				for i := 0; i < int(botsNeeded); i++ {
 					botPlayer := m.newBotJoined()
-					m.Players[botPlayer.PlayerId()] = botPlayer
-					botRoutine := bot.BuildBot(m.GameModel, botPlayer, m.Input, m.logger)
+					m.Players[botPlayer.PlayerId()] = &botPlayer
+					botRoutine := bot.BuildBot(m.GameModel, botPlayer, m.Input, m.logger, m.db)
 					go botRoutine.Run()
 				}
 				return
@@ -69,14 +69,14 @@ func (m *Manager) newBotJoined() models.Bot {
 	}
 
 	stmt, err := tx.Prepare(`
-		INSERT INTO players (userId, gameId, color, bot) VALUES ($1, $2, $3, $4) RETURNING id
+		INSERT INTO players (userId, gameId, color, bot, units_in_reserve) VALUES ($1, $2, $3, $4, $5) RETURNING id
 	`)
 	if err != nil {
 		m.logger.Error("cant prepare statement")
 		panic(err)
 	}
 
-	row := stmt.QueryRow(nil, m.GameModel.Id, newColor, true)
+	row := stmt.QueryRow(nil, m.GameModel.Id, newColor, true, config.INITIAL_NUMBER_OF_UNITS)
 
 	var botId int64
 	err = row.Scan(&botId)
@@ -87,10 +87,11 @@ func (m *Manager) newBotJoined() models.Bot {
 
 	name := "bot " + newColor
 	return models.Bot{
-		Id:    botId,
-		Color: newColor,
-		Name:  name,
-		Input: make(chan string, 5),
+		Id:             botId,
+		Color:          newColor,
+		Name:           name,
+		Input:          make(chan models.WebsocketNotification, 5),
+		UnitsInReserve: config.INITIAL_NUMBER_OF_UNITS,
 	}
 }
 
@@ -101,7 +102,7 @@ func (m *Manager) newPlayerJoined(command models.Command) {
 	m.Players[joinCommand.Player.PlayerId()] = joinCommand.Player
 
 	opponentJoinedMessage := models.WebsocketNotification{
-		Type:    "OPPONENT_JOINED_SUCCESS",
+		Type:    models.OPPONENT_JOINED_SUCCESS,
 		Payload: joinCommand.Player,
 	}
 	m.sendToAllExcept(opponentJoinedMessage, joinCommand.Player.PlayerId())
@@ -128,7 +129,7 @@ func (m Manager) sendGameStartMessage() {
 		playersJoined.Color = player.PlayerColor()
 
 		notification := models.WebsocketNotification{
-			Type:    "GAME_START_SUCCESS",
+			Type:    models.GAME_START_SUCCESS,
 			Payload: playersJoined,
 		}
 
