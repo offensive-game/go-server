@@ -54,6 +54,9 @@ func setUpHandlers(db *sql.DB) {
 	http.Handle("/me", appContext.Chain("GET", &handlers.Me{}, middleware.WithUser))
 	http.Handle("/game", appContext.Chain("POST,GET", &handlers.GameRequests{DB: db}, middleware.WithUser))
 	http.Handle("/game/", appContext.Chain("POST,GET", &handlers.GameRequests{DB: db}, middleware.WithUser))
+
+	// Game endpoints
+	http.Handle("/deploy", appContext.Chain("POST", &handlers.Deploy{}, middleware.WithUser))
 }
 
 func clearUp(db *sql.DB) {

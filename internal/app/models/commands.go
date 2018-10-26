@@ -19,8 +19,9 @@ func (p PlayerJoined) Order() string {
 }
 
 type Deploy struct {
-	Player Player
-	Land   string
+	Player  Player
+	Land    string
+	Success chan bool
 }
 
 func (d Deploy) Order() string {

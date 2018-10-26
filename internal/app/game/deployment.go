@@ -39,8 +39,10 @@ func (m *Manager) deployUnit(deploy models.Deploy) {
 		if err != nil {
 			tx.Rollback()
 			m.logger.Fatal("Rolling back transaction in deployUnit")
+			deploy.Success <- false
 			return
 		}
+		deploy.Success <- true
 		tx.Commit()
 	}()
 
