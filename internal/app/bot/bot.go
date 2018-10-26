@@ -2,6 +2,7 @@ package bot
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"go-server/internal/app/config"
 	"go-server/internal/app/models"
@@ -93,6 +94,7 @@ func (b *Executor) deploy() error {
 	for i := 0; i < b.Bot.PlayerUnitsInReserve(); i++ {
 		randomInt := rand.Intn(len(myLands))
 		randomLand := myLands[randomInt]
+		b.logger.Info(fmt.Sprintf("DEPLOYING ON %s random number %d", randomLand, randomInt))
 
 		message := models.Deploy{
 			Player: &b.Bot,
@@ -102,7 +104,7 @@ func (b *Executor) deploy() error {
 		b.Output <- message
 	}
 
-	b.Bot.UnitsInReserve = 0
+	b.Bot.SetPlayerUnitsInReserve(0)
 
 	return nil
 }

@@ -2,6 +2,7 @@ package game
 
 import (
 	"database/sql"
+	"fmt"
 	"go-server/internal/app/config"
 	"go-server/internal/app/models"
 	"time"
@@ -18,7 +19,7 @@ func (m *Manager) Deployment() {
 		select {
 		case message := <-m.Input:
 			{
-				m.logger.Debug("deploy message received")
+				//m.logger.Debug("deploy message received")
 				if message.Order() == config.ORDER_DEPLOY {
 					m.deployUnit(message.(models.Deploy))
 				}
@@ -60,7 +61,8 @@ func (m *Manager) deployUnit(deploy models.Deploy) {
 
 	for _, player := range m.Players {
 		if player.PlayerId() == deploy.Player.PlayerId() {
-			player.SetPlayerUnitsInReserve(1)
+			player.SetPlayerUnitsInReserve(player.PlayerUnitsInReserve() - 1)
+			m.logger.Info(fmt.Sprintf("Units deployed, left %d", player.PlayerUnitsInReserve()))
 		}
 	}
 }

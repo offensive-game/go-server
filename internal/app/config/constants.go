@@ -14,7 +14,7 @@ const (
 )
 
 const ALL_PLAYERS = -1
-const INITIAL_NUMBER_OF_UNITS = 10
+const INITIAL_NUMBER_OF_UNITS = 20
 
 const DEPLOYMENT_DURATION = 60
 

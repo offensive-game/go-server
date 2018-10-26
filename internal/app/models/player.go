@@ -51,8 +51,8 @@ func (h *Human) PlayerUnitsInReserve() int {
 	return h.UnitsInReserve
 }
 
-func (h *Human) SetPlayerUnitsInReserve(inc int) {
-	h.UnitsInReserve = h.UnitsInReserve + inc
+func (h *Human) SetPlayerUnitsInReserve(units int) {
+	h.UnitsInReserve = units
 }
 
 type Bot struct {
@@ -87,6 +87,6 @@ func (b *Bot) PlayerUnitsInReserve() int {
 	return b.UnitsInReserve
 }
 
-func (b *Bot) SetPlayerUnitsInReserve(inc int) {
-	b.UnitsInReserve = b.UnitsInReserve + inc
+func (b *Bot) SetPlayerUnitsInReserve(units int) {
+	b.UnitsInReserve = units
 }
