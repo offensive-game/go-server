@@ -25,7 +25,7 @@ func NewGame(currentGame models.GameModel, db *sql.DB) Manager {
 	newManager := Manager{
 		GameModel:     currentGame,
 		JoinGameMutex: &sync.Mutex{},
-		Input:         make(chan models.Command),
+		Input:         make(chan models.Command, 2),
 		db:            db,
 		Players:       players,
 	}
@@ -47,9 +47,7 @@ func (m *Manager) Run() {
 				player.SendMessage(models.WebsocketNotification{Type: models.COMMAND_KILL})
 			}
 		}
-		if err != nil {
-			m.endGame()
-		}
+		m.endGame()
 	}()
 
 	// Waiting to join

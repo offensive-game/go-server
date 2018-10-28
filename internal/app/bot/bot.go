@@ -97,8 +97,9 @@ func (b *Executor) deploy() error {
 		b.logger.Info(fmt.Sprintf("DEPLOYING ON %s random number %d", randomLand, randomInt))
 
 		message := models.Deploy{
-			Player: &b.Bot,
-			Land:   randomLand,
+			Player:  &b.Bot,
+			Land:    randomLand,
+			Success: nil,
 		}
 
 		b.Output <- message

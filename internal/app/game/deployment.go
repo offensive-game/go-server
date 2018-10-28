@@ -15,6 +15,12 @@ func (m *Manager) Deployment() {
 	if err != nil {
 		m.logger.Error(err)
 	}
+
+	deploymentTimeoutDuration, err := time.ParseDuration(fmt.Sprintf("%ds", config.DEPLOYMENT_DURATION))
+	if err != nil {
+		m.logger.Error(err)
+	}
+	timeout := time.After(deploymentTimeoutDuration)
 	for {
 		select {
 		case message := <-m.Input:
@@ -24,7 +30,7 @@ func (m *Manager) Deployment() {
 					m.deployUnit(message.(models.Deploy))
 				}
 			}
-		case <-time.After(config.DEPLOYMENT_DURATION * time.Second):
+		case <-timeout:
 			{
 				m.logger.Info("deployment phase time-out")
 				return
@@ -39,10 +45,14 @@ func (m *Manager) deployUnit(deploy models.Deploy) {
 		if err != nil {
 			tx.Rollback()
 			m.logger.Fatal("Rolling back transaction in deployUnit")
-			deploy.Success <- false
+			if deploy.Success != nil {
+				deploy.Success <- false
+			}
 			return
 		}
-		deploy.Success <- true
+		if deploy.Success != nil {
+			deploy.Success <- true
+		}
 		tx.Commit()
 	}()
 
