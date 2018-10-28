@@ -86,13 +86,22 @@ func (m *Manager) newBotJoined() models.Bot {
 	}
 
 	name := "bot " + newColor
-	return models.Bot{
+	newBot := models.Bot{
 		Id:             botId,
 		Color:          newColor,
 		Name:           name,
 		Input:          make(chan models.WebsocketNotification, 5),
 		UnitsInReserve: config.INITIAL_NUMBER_OF_UNITS,
 	}
+
+	opponentJoinedMessage := models.WebsocketNotification{
+		Type:    models.OPPONENT_JOINED_SUCCESS,
+		Payload: newBot,
+	}
+
+	m.sendToAllExcept(opponentJoinedMessage, newBot.Id)
+
+	return newBot
 }
 
 func (m *Manager) newPlayerJoined(command models.Command) {

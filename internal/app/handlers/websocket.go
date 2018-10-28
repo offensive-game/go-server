@@ -61,12 +61,14 @@ func (w *WebsocketOpen) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
+	player.Socket = conn
+
 	gameManager, found := game.GamesDictionary[gameId]
 	if !found {
 		panic("Can't find game with id")
 	}
 
-	command := models.PlayerJoined{Player: &player, Connection: conn}
+	command := models.PlayerJoined{Player: &player}
 
 	gameManager.Players[player.PlayerId()] = &player
 	gameManager.Input <- command

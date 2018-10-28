@@ -19,7 +19,7 @@ func (m *Manager) Deployment() {
 		select {
 		case message := <-m.Input:
 			{
-				//m.logger.Debug("deploy message received")
+				m.logger.Debug("deploy message received")
 				if message.Order() == config.ORDER_DEPLOY {
 					m.deployUnit(message.(models.Deploy))
 				}

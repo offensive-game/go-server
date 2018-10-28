@@ -55,16 +55,16 @@ func selectCurrentRound(db *sql.DB, gameId int64) (int, string, time.Time, error
 }
 
 func (m Manager) selectPlayers() ([]models.PlayerStatus, error) {
-	status := make(map[int64]models.PlayerStatus)
+	status := make(map[int64]*models.PlayerStatus)
 
 	players := m.getPlayersSlice()
 	for _, player := range players {
-		status[player.PlayerId()] = models.PlayerStatus{
+		status[player.PlayerId()] = &models.PlayerStatus{
 			Id:             player.PlayerId(),
 			Color:          player.PlayerColor(),
 			Name:           player.PlayerName(),
 			Cards:          []string{},
-			Lands:          []models.Land{},
+			Lands:          make([]models.Land, 0),
 			UnitsInReserve: config.INITIAL_NUMBER_OF_UNITS,
 		}
 	}
@@ -94,16 +94,16 @@ func (m Manager) selectPlayers() ([]models.PlayerStatus, error) {
 		}
 
 		playerStatus := status[currentPlayer]
-		playerStatus.Lands = append(playerStatus.Lands, models.Land{
+		land := models.Land{
 			Name:          currentLand,
 			NumberOfUnits: currentTroops,
-		})
-
+		}
+		playerStatus.Lands = append(playerStatus.Lands, land)
 	}
 
 	result := make([]models.PlayerStatus, 0)
 	for _, p := range status {
-		result = append(result, p)
+		result = append(result, *p)
 	}
 
 	return result, nil

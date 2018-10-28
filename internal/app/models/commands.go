@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/gorilla/websocket"
 	"go-server/internal/app/config"
 )
 
@@ -11,7 +10,6 @@ type Command interface {
 
 type PlayerJoined struct {
 	Player     Player
-	Connection *websocket.Conn
 }
 
 func (p PlayerJoined) Order() string {
